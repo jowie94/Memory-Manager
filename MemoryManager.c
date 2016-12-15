@@ -8,12 +8,6 @@
 #define NEXT_BLOCK(block) block + HEAD(block)->size + OFFSET
 #define NEXT_HEAD(head) HEAD(NEXT_BLOCK((char*)head))
 
-struct
-{
-	size_t max_size;
-	//size_t memory_used;
-	char* memory_block;
-} Memory = { 0, NULL };
 
 typedef struct Head Head;
 
@@ -23,6 +17,19 @@ struct Head
 	size_t size;
 	Head* left;
 };
+
+union MemoryMap
+{
+	char* memory_block;
+	Head* first_head;
+};
+
+struct
+{
+	size_t max_size;
+	//size_t memory_used;
+	union MemoryMap map;
+} Memory = { 0, { NULL } };
 
 void* alloc(Head* head, size_t size)
 {
@@ -36,6 +43,8 @@ void* alloc(Head* head, size_t size)
 		next->in_use = 0;
 		next->left = head;
 	}
+
+	//memory_used += head->size;
 
 	return ++head;
 }
@@ -61,12 +70,11 @@ void cleanup(Head* head)
 
 void InitMemoryManager(size_t max_size)
 {
-	Memory.memory_block = malloc(max_size);
-	Memory.max_size = max_size;
+	Memory.map.memory_block = malloc(max_size);
 	Memory.max_size = max_size - OFFSET;
 
 	// Create the first head element
-	Head* first = HEAD(Memory.memory_block);
+	Head* first = Memory.map.first_head;
 	first->in_use = 0;
 	first->size = max_size - OFFSET;
 	first->left = NULL;
@@ -74,20 +82,17 @@ void InitMemoryManager(size_t max_size)
 
 void* MyMalloc(size_t size)
 {
-	assert(Memory.memory_block != NULL);
-	if (Memory.memory_block == NULL)
+	assert(Memory.map.memory_block != NULL);
+	if (Memory.map.memory_block == NULL)
 		return NULL;
 
-	char* block = Memory.memory_block;
-	char found = 0;
-	Head* curr = NULL;
-	while (!found && block < Memory.memory_block + OFFSET)
+	char* block = Memory.map.memory_block;
+	char found;
+	Head* curr = Memory.map.first_head;
+	while (!((found = !curr->in_use && curr->size >= size)) && block < Memory.map.memory_block + OFFSET)
 	{
+		block = NEXT_BLOCK(block);
 		curr = HEAD(block);
-		if (!curr->in_use && curr->size >= size)
-			found = 1;
-		else
-			block += curr->size + OFFSET;
 	}
 
 	return found ? alloc(curr, size) : NULL;
