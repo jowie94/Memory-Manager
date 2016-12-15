@@ -3,9 +3,10 @@
 
 #include "MemoryManager.h"
 
-#define HEAD(block) (Head*)block
+#define HEAD(block) ((Head*)(block))
 #define OFFSET sizeof(Head)
-#define NEXT_HEAD(head) (Head*)((char*)head + head->size + OFFSET)
+#define NEXT_BLOCK(block) block + HEAD(block)->size + OFFSET
+#define NEXT_HEAD(head) HEAD(NEXT_BLOCK((char*)head))
 
 struct
 {
@@ -28,8 +29,10 @@ void* alloc(Head* head, size_t size)
 	head->in_use = 1;
 	if (head->size > size + OFFSET)
 	{
+		size_t old_size = head->size;
+		head->size = size;
 		Head* next = NEXT_HEAD(head);
-		next->size = head->size - size - OFFSET;
+		next->size = old_size - size - OFFSET;
 		next->in_use = 0;
 		next->left = head;
 	}
@@ -41,6 +44,7 @@ void InitMemoryManager(size_t max_size)
 {
 	Memory.memory_block = malloc(max_size);
 	Memory.max_size = max_size;
+	Memory.max_size = max_size - OFFSET;
 
 	// Create the first head element
 	Head* first = HEAD(Memory.memory_block);
