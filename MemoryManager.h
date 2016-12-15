@@ -11,6 +11,8 @@ void* MyMalloc(size_t size);
 
 void MyFree(void* block);
 
+void StopMemoryManager();
+
 #ifdef __cplusplus
 }
 #endif

@@ -12,6 +12,6 @@ To use it under Visual Studio, add the **vcxproj** as a project, and add the .li
 ## Roadmap 🗺
 - [x] Implement malloc
 - [x] Implement free
-- [ ] Implement memory manager cleanup
+- [x] Implement memory manager cleanup
 - [ ] Cleanup code
 - [ ] Improve efficiency (if possible, and if I have enough time)

@@ -8,6 +8,7 @@
 #define NEXT_BLOCK(block) block + HEAD(block)->size + OFFSET
 #define NEXT_HEAD(head) HEAD(NEXT_BLOCK((char*)head))
 
+void printf(const char* str, ...);
 
 typedef struct Head Head;
 
@@ -106,3 +107,13 @@ void MyFree(void* block)
 	cleanup(head);
 }
 
+void StopMemoryManager()
+{
+#ifdef _DEBUG
+	if (Memory.map.first_head->size != Memory.max_size)
+		printf("[DEBUG] Memory not fully cleaned!");
+#endif
+
+	free(Memory.map.memory_block);
+	Memory.max_size = 0;
+}
