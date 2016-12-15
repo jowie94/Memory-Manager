@@ -9,6 +9,8 @@ void InitMemoryManager(size_t max_size);
 
 void* MyMalloc(size_t size);
 
+void MyFree(void* block);
+
 #ifdef __cplusplus
 }
 #endif

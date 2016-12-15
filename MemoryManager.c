@@ -40,6 +40,25 @@ void* alloc(Head* head, size_t size)
 	return ++head;
 }
 
+void cleanup(Head* head)
+{
+	head->in_use = 0;
+	
+	Head* next = NEXT_HEAD(head);
+	while (!next->in_use)
+	{
+		head->size += next->size + OFFSET;
+		next = NEXT_HEAD(next);
+	}
+
+	next = head->left;
+	while (next && !next->in_use)
+	{
+		head->size += next->size + OFFSET;
+		next = next->left;
+	}
+}
+
 void InitMemoryManager(size_t max_size)
 {
 	Memory.memory_block = malloc(max_size);
@@ -73,3 +92,12 @@ void* MyMalloc(size_t size)
 
 	return found ? alloc(curr, size) : NULL;
 }
+
+void MyFree(void* block)
+{
+	assert(block != NULL);
+	char* blk = (char*)block;
+	Head* head = HEAD(blk - OFFSET);
+	cleanup(head);
+}
+
